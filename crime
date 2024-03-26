@@ -1,0 +1,106 @@
+crime_fragment.xml
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/textCrime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Текст преступления"
+        android:layout_centerInParent="true"/>
+
+    <Button
+        android:id="@+id/btnChangeTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Изменить время"
+        android:layout_below="@id/textCrime"
+        android:layout_alignParentStart="true"
+        android:onClick="@{() -> viewModel.onChangeTimeClicked()}"/>
+
+    <Button
+        android:id="@+id/btnChangeDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Изменить дату"
+        android:layout_below="@id/textCrime"
+        android:layout_alignParentEnd="true"
+        android:onClick="@{() -> viewModel.onChangeDateClicked()}"/>
+
+</RelativeLayout>
+
+CrimeFragment.kt
+
+class CrimeFragment : Fragment() {
+
+    private lateinit var viewModel: CrimeDetailViewModel
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val binding: CrimeFragmentBinding = DataBindingUtil.inflate(
+            inflater, R.layout.crime_fragment, container, false
+        )
+
+        viewModel = ViewModelProvider(this).get(CrimeDetailViewModel::class.java)
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = viewLifecycleOwner
+
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        viewModel.crime.observe(viewLifecycleOwner, Observer { crime ->
+            textCrime.text = crime.title
+        })
+
+        viewModel.showDatePicker.observe(viewLifecycleOwner, Observer {
+            showDatePickerDialog()
+        })
+
+        viewModel.showTimePicker.observe(viewLifecycleOwner, Observer {
+            showTimePickerDialog()
+        })
+    }
+
+    private fun showDatePickerDialog() {
+        // Отображение диалогового окна для выбора даты
+        val datePicker = DatePickerFragment()
+        datePicker.show(childFragmentManager, "DatePickerFragment")
+    }
+
+    private fun showTimePickerDialog() {
+        // Отображение диалогового окна для выбора времени
+        val timePicker = TimePickerFragment()
+        timePicker.show(childFragmentManager, "TimePickerFragment")
+    }
+}
+
+CrimeDetailViewModel.kt
+
+class CrimeDetailViewModel : ViewModel() {
+
+    private val _crime = MutableLiveData<Crime>()
+    val crime: LiveData<Crime>
+        get() = _crime
+
+    private val _showDatePicker = MutableLiveData<Unit>()
+    val showDatePicker: LiveData<Unit>
+        get() = _showDatePicker
+
+    private val _showTimePicker = MutableLiveData<Unit>()
+    val showTimePicker: LiveData<Unit>
+        get() = _showTimePicker
+
+    fun onChangeTimeClicked() {
+        _showTimePicker.value = Unit
+    }
+
+    fun onChangeDateClicked() {
+        _showDatePicker.value = Unit
+    }
